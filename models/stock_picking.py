@@ -18,9 +18,6 @@ class StockPicking(models.Model):
         self.ensure_one()
         view = self.env.ref('stock_landed_costs.view_stock_landed_cost_form')
 
-        logging.getLogger("lines").warning("-"*80)
-        logging.getLogger("lines").warning(self.landing_ids)
-
         action = {}
         action['name'] = _('Landed Costs')
         action['view_type'] = 'form'
@@ -32,8 +29,13 @@ class StockPicking(models.Model):
         action['context'] = {'default_picking_id': self.id}
 
         if self.landing_ids:
-            for landig in self.landing_ids:
-                action['res_id'] = landig.id
+            landing_ids = set([line.id for line in self.landing_ids])
+            if len(landing_ids) == 1:
+                action['res_id'] = list(landing_ids)[0]
+            else:
+                action['domain'] = "[('id', 'in', %s)]" % list(landing_ids)
+                
+            # for landig in self.landing_ids:
 
         return action
 
